@@ -1,0 +1,11 @@
+[package]
+name = "complex_polynomials_lib"
+version = "0.1.0"
+edition = "2021"
+build = "build.rs"
+
+[lib]
+name = "libcomplex_polynomials"
+crate_type = ["staticlib", "dylib"]
+
+[dependencies]
