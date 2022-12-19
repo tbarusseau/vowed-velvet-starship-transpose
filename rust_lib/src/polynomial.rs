@@ -57,11 +57,25 @@ impl Polynomial {
     pub fn add(a: &Polynomial, b: &Polynomial) -> Polynomial {
         let mut coefficients = vec![];
 
-        for (c1, c2) in a.coefficients.iter().zip(b.coefficients.iter()) {
-            coefficients.push(c1 + c2)
+        let mut iter1 = a.coefficients.iter();
+        let mut iter2 = b.coefficients.iter();
+
+        // Make sure iter1 is the longest one
+        if b.degree > a.degree {
+            std::mem::swap(&mut iter1, &mut iter2);
         }
 
-        let res = Polynomial::new(coefficients);
+        // Pad the shortest one with zeroes
+        let zero_iter = std::iter::repeat(&Complex::ZERO);
+        let iter2 = zero_iter
+            .take(b.degree.abs_diff(a.degree))
+            .chain(iter2.rev());
+
+        for (c1, c2) in iter1.rev().zip(iter2) {
+            coefficients.push(c1 + c2);
+        }
+
+        let res = Polynomial::new(coefficients.into_iter().rev().collect());
 
         res.trim()
     }
@@ -242,6 +256,11 @@ mod tests {
 
         let p1 = Polynomial::new(vec![Complex::new(3.0, -2.0), Complex::new(1.0, -3.0)]);
         let p2 = Polynomial::new(vec![Complex::new(1.0, 4.0), Complex::new(-1.0, 3.0)]);
+
+        assert_eq!(
+            Polynomial::new(vec![Complex::new(4.0, 2.0)]),
+            Polynomial::add(&p1, &p2),
+        );
 
         assert_eq!(
             Polynomial::new(vec![Complex::new(4.0, 2.0)]),

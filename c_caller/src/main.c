@@ -1,4 +1,5 @@
-#include <stdio.h>
+#include <stdio.h>  // printf
+#include <string.h> // memset
 
 #include "rust_api.h"
 
@@ -10,6 +11,38 @@
 #pragma comment(lib, "BCRYPT")
 #pragma comment(lib, "ADVAPI32")
 #endif
+
+char print_buffer[1024];
+const size_t print_buffer_size = 1024;
+
+void print_polynomial(polynomial_t *p)
+{
+    int index = 0;
+    complex_t c;
+
+    memset(print_buffer, 0x00, 1024);
+
+    index += snprintf(print_buffer + index, print_buffer_size - index, "Polynomial of degree %zd: ", p->degree);
+    for (int i = p->degree; i >= 0; --i)
+    {
+        c = p->coefficients[i];
+
+        if (c.re == 0 && c.im == 0)
+            continue;
+
+        if (i != p->degree)
+            index += snprintf(print_buffer + index, print_buffer_size - index, " + ");
+
+        if (i == 0)
+            index += snprintf(print_buffer + index, print_buffer_size - index, "%.2g + %.2gi", c.re, c.im);
+        else if (i == 1)
+            index += snprintf(print_buffer + index, print_buffer_size - index, "(%.2g + %.2gi)X", c.re, c.im);
+        else
+            index += snprintf(print_buffer + index, print_buffer_size - index, "(%.2g + %.2gi)X%d", c.re, c.im, i);
+    }
+
+    printf("%s\n", print_buffer);
+}
 
 int main(void)
 {
@@ -29,13 +62,41 @@ int main(void)
     complex_t *c2 = complex_mul(a2, b2);
     printf("Multiplied: %.2f + %.2fi\n", c2->re, c2->im);
 
-    // Free the memory
-    free(a1);
-    free(b1);
-    free(c1);
-    free(a2);
-    free(b2);
-    free(c2);
+    // Free complexes
+    complex_free(a1);
+    complex_free(b1);
+    complex_free(c1);
+    complex_free(a2);
+    complex_free(b2);
+    complex_free(c2);
+
+    // Random polynomials
+    printf("=== RANDOM POLYNOMIAL GENERATION ===\n");
+    polynomial_t *p = NULL;
+
+    for (int i = 0; i < 5; i++)
+    {
+        p = gen_random_polynomial();
+        print_polynomial(p);
+        polynomial_free(p);
+    }
+
+    // Polynomial arithmetic
+    printf("=== POLYNOMIAL ARITHMETIC ===\n");
+
+    polynomial_t *p1 = gen_random_polynomial();
+    polynomial_t *p2 = gen_random_polynomial();
+    printf("Sum between the two following polynomials:\n");
+    print_polynomial(p1);
+    print_polynomial(p2);
+    polynomial_t *sum_result = polynomial_add(p1, p2);
+    printf("Result:\n");
+    print_polynomial(sum_result);
+
+    // Free polynomials
+    polynomial_free(p1);
+    polynomial_free(p2);
+    polynomial_free(sum_result);
 
     return 0;
 }

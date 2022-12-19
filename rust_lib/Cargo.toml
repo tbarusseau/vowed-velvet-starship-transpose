@@ -9,3 +9,4 @@ name = "libcomplex_polynomials"
 crate_type = ["staticlib", "dylib"]
 
 [dependencies]
+rand = "0.8.5"

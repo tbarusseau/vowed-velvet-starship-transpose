@@ -3,6 +3,8 @@ use std::{
     ops::{Add, Mul},
 };
 
+use rand::{rngs::ThreadRng, Rng};
+
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Complex {
@@ -11,6 +13,8 @@ pub struct Complex {
 }
 
 impl Complex {
+    pub const ZERO: Complex = Complex { re: 0.0, im: 0.0 };
+
     pub fn new(re: f32, im: f32) -> Complex {
         Complex { re, im }
     }
@@ -22,7 +26,12 @@ impl Complex {
         }
     }
 
-    pub const ZERO: Complex = Complex { re: 0.0, im: 0.0 };
+    pub fn random(rand: &mut ThreadRng) -> Complex {
+        let re = rand.gen_range(-10.0..10.0);
+        let im = rand.gen_range(-10.0..10.0);
+
+        Complex { re, im }
+    }
 }
 
 impl<'a, 'b> Add<&'b Complex> for &'a Complex {
