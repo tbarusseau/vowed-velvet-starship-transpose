@@ -12,12 +12,11 @@ pub extern "C" fn matrix_new(content: *mut Polynomial, width: usize, height: usi
 }
 
 #[no_mangle]
-pub extern "C" fn polynomial_new(content: *mut Complex, degree: usize) -> *mut Polynomial {
+pub extern "C" fn polynomial_new(content: *mut Complex, len: usize) -> *mut Polynomial {
     unsafe {
-        Box::into_raw(Box::new(Polynomial::new(
-            degree,
-            Vec::from_raw_parts(content, degree + 1, degree + 1),
-        )))
+        Box::into_raw(Box::new(Polynomial::new(Vec::from_raw_parts(
+            content, len, len,
+        ))))
     }
 }
 

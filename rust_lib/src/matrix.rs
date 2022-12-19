@@ -1,5 +1,3 @@
-use std::ops::{Add, Mul};
-
 use crate::polynomial::Polynomial;
 
 #[repr(C)]
@@ -21,98 +19,110 @@ impl Matrix {
             content,
         }
     }
-}
 
-impl<'a, 'b> Add<&'b Matrix> for &'a Matrix {
-    type Output = Matrix;
+    /// Add two matrices. The sizes of `a` and `b` must match.
+    pub fn add(a: &Matrix, b: &Matrix) -> Matrix {
+        assert_eq!(a.width, b.width);
+        assert_eq!(a.height, b.height);
 
-    fn add(self, rhs: &'b Matrix) -> Self::Output {
-        assert_eq!(self.width, rhs.width);
-        assert_eq!(self.height, rhs.height);
+        let mut result = vec![Polynomial::ZERO; b.width * a.height];
 
-        let mut result = vec![Polynomial::ZERO; rhs.width * self.height];
+        for i in 0..a.height {
+            for j in 0..b.width {
+                let idx = j + i * b.width;
 
-        for i in 0..self.height {
-            for j in 0..rhs.width {
-                let idx = j + i * rhs.width;
-
-                // result[i][j] = self.content[i][j] + rhs.content[i][j];
-                result[idx] = &self.content[idx] + &rhs.content[idx];
+                result[idx] = Polynomial::add(&a.content[idx], &b.content[idx]);
             }
         }
 
         Matrix {
-            width: rhs.width,
-            height: self.height,
+            width: b.width,
+            height: a.height,
             content: result,
         }
     }
-}
 
-impl Add for Matrix {
-    type Output = Matrix;
+    /// Multiply two matrices. The width of `a` must match the height of `b`.
+    pub fn mul(a: &Matrix, b: &Matrix) -> Matrix {
+        assert_eq!(a.width, b.height);
 
-    fn add(self, rhs: Self) -> Self::Output {
-        &self + &rhs
-    }
-}
+        let mut result = vec![Polynomial::ZERO; b.width * a.height];
 
-impl<'a, 'b> Mul<&'b Matrix> for &'a Matrix {
-    type Output = Matrix;
+        for i in 0..a.height {
+            for j in 0..b.width {
+                for k in 0..a.width {
+                    let mul =
+                        Polynomial::mul(&a.content[k + i * a.width], &b.content[j + k * b.width]);
+                    let add = Polynomial::add(&result[j + i * b.width], &mul);
 
-    fn mul(self, rhs: &'b Matrix) -> Self::Output {
-        assert_eq!(self.width, rhs.height);
-
-        let mut result = vec![Polynomial::ZERO; rhs.width * self.height];
-
-        for i in 0..self.height {
-            for j in 0..rhs.width {
-                for k in 0..self.width {
-                    // result[i][j] = result[i][j] + self.content[i][k] * rhs.content[k][j];
-                    result[j + i * rhs.width] = &result[j + i * rhs.width]
-                        + &(&self.content[k + i * self.width] * &rhs.content[j + k * rhs.width]);
+                    result[j + i * b.width] = add;
                 }
             }
         }
 
         Matrix {
-            width: rhs.width,
-            height: self.height,
+            width: b.width,
+            height: a.height,
+            content: result,
+        }
+    }
+
+    /// Add two matrices while restricting the contained polynomials to the provided
+    /// ring degree. `a` and `b` must have the same size.
+    pub fn add_in_ring(a: &Matrix, b: &Matrix, ring: usize) -> Matrix {
+        assert_eq!(a.width, b.width);
+        assert_eq!(a.height, b.height);
+
+        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+
+        for i in 0..a.height {
+            for j in 0..b.width {
+                let idx = j + i * b.width;
+
+                result[idx] = Polynomial::add_in_ring(&a.content[idx], &b.content[idx], ring);
+            }
+        }
+
+        Matrix {
+            width: b.width,
+            height: a.height,
+            content: result,
+        }
+    }
+
+    /// Multiply two matrices while restricting the contained polynomials to the provided
+    /// ring degree. The width of `a` must match the height of `b`.
+    pub fn mul_in_ring(a: &Matrix, b: &Matrix, ring: usize) -> Matrix {
+        assert_eq!(a.width, b.height);
+
+        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+
+        for i in 0..a.height {
+            for j in 0..b.width {
+                for k in 0..a.width {
+                    let mul = Polynomial::mul_in_ring(
+                        &a.content[k + i * a.width],
+                        &b.content[j + k * b.width],
+                        ring,
+                    );
+                    let add = Polynomial::add_in_ring(&result[j + i * b.width], &mul, ring);
+
+                    result[j + i * b.width] = add;
+                }
+            }
+        }
+
+        Matrix {
+            width: b.width,
+            height: a.height,
             content: result,
         }
     }
 }
 
-impl Mul for Matrix {
-    type Output = Matrix;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        &self * &rhs
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    // use super::*;
+    use super::*;
 
-    // // Below: sanity checks on matrices sum/multiplication.
-    // #[test]
-    // fn test_matrices_arithmetic() {
-    //     let m1 = Matrix::new(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
-    //     let m2 = Matrix::new(vec![8.0, 12.0, 13.0, 5.0], 2, 2);
-
-    //     assert_eq!(2, m1.width);
-    //     assert_eq!(2, m1.height);
-
-    //     assert_eq!(Matrix::new(vec![9.0, 14.0, 16.0, 9.0], 2, 2), &m1 + &m2);
-    //     assert_eq!(Matrix::new(vec![34.0, 22.0, 76.0, 56.0], 2, 2), &m1 * &m2);
-
-    //     let m1 = Matrix::new(vec![1.0, 2.0, 3.0, 4.0], 2, 2);
-    //     let m2 = Matrix::new(vec![3.0, 4.0, 5.0, 1.0, 2.0, 3.0], 3, 2);
-
-    //     assert_eq!(
-    //         Matrix::new(vec![5.0, 8.0, 11.0, 13.0, 20.0, 27.0], 3, 2),
-    //         &m1 * &m2,
-    //     );
-    // }
+    // TODO: Add at least a single test for sum/multiplication.
 }

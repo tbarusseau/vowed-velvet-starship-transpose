@@ -1,4 +1,7 @@
-use std::ops::{Add, Mul};
+use std::{
+    fmt::Display,
+    ops::{Add, Mul},
+};
 
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -10,6 +13,13 @@ pub struct Complex {
 impl Complex {
     pub fn new(re: f32, im: f32) -> Complex {
         Complex { re, im }
+    }
+
+    pub fn neg(&self) -> Complex {
+        Complex {
+            re: -self.re,
+            im: -self.im,
+        }
     }
 
     pub const ZERO: Complex = Complex { re: 0.0, im: 0.0 };
@@ -53,6 +63,20 @@ impl Mul for Complex {
     }
 }
 
+impl Display for Complex {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if self == &Self::ZERO {
+            write!(f, "0")
+        } else if self.im == 0.0 {
+            write!(f, "{}", self.re)
+        } else if self.re == 0.0 {
+            write!(f, "{}i", self.im)
+        } else {
+            write!(f, "{} + {}i", self.re, self.im)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -82,5 +106,10 @@ mod tests {
             },
             c1 * c2
         );
+
+        let c1 = Complex::new(0.0, 0.0);
+        let c2 = Complex::new(-1.0, -1.0);
+
+        assert_eq!(Complex::new(0.0, 0.0), c1 * c2);
     }
 }
