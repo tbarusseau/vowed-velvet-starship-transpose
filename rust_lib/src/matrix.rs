@@ -25,7 +25,7 @@ impl Matrix {
         assert_eq!(a.width, b.width);
         assert_eq!(a.height, b.height);
 
-        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+        let mut result = vec![Polynomial::zero(); b.width * a.height];
 
         for i in 0..a.height {
             for j in 0..b.width {
@@ -46,7 +46,7 @@ impl Matrix {
     pub fn mul(a: &Matrix, b: &Matrix) -> Matrix {
         assert_eq!(a.width, b.height);
 
-        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+        let mut result = vec![Polynomial::zero(); b.width * a.height];
 
         for i in 0..a.height {
             for j in 0..b.width {
@@ -73,7 +73,7 @@ impl Matrix {
         assert_eq!(a.width, b.width);
         assert_eq!(a.height, b.height);
 
-        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+        let mut result = vec![Polynomial::zero(); b.width * a.height];
 
         for i in 0..a.height {
             for j in 0..b.width {
@@ -95,7 +95,7 @@ impl Matrix {
     pub fn mul_in_ring(a: &Matrix, b: &Matrix, ring: usize) -> Matrix {
         assert_eq!(a.width, b.height);
 
-        let mut result = vec![Polynomial::ZERO; b.width * a.height];
+        let mut result = vec![Polynomial::zero(); b.width * a.height];
 
         for i in 0..a.height {
             for j in 0..b.width {

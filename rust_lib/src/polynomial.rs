@@ -10,17 +10,19 @@ pub struct Polynomial {
 }
 
 impl Polynomial {
-    pub const ZERO: Polynomial = Polynomial {
-        degree: 0,
-        coefficients: vec![],
-    };
+    pub fn zero() -> Polynomial {
+        Polynomial {
+            degree: 0,
+            coefficients: vec![Complex::ZERO],
+        }
+    }
 
     /// Create a new complex polynomial, with its degree based on the number of coefficients.
     ///
     /// The coefficients are stored from lowest degree (0) to highest degree.
     pub fn new(coefficients: Vec<Complex>) -> Polynomial {
         if coefficients.len() == 0 {
-            Polynomial::ZERO
+            Polynomial::zero()
         } else {
             Polynomial {
                 degree: coefficients.len() - 1,
@@ -32,6 +34,10 @@ impl Polynomial {
     /// Trims a polynomial if needed, removing the highest degree terms with a 0 coefficient
     /// and adjusting the degree of the polynomial if needed.
     pub fn trim(self) -> Polynomial {
+        if self.degree == 0 {
+            return self;
+        }
+
         let mut degree = self.degree;
         let mut coeff_clone = self.coefficients.clone();
         while let Some(last) = coeff_clone.pop() {
@@ -42,11 +48,7 @@ impl Polynomial {
             degree -= 1;
         }
 
-        if degree == 1 {
-            Polynomial::ZERO
-        } else {
-            Polynomial::new(self.coefficients.into_iter().take(degree + 1).collect())
-        }
+        Polynomial::new(self.coefficients.into_iter().take(degree + 1).collect())
     }
 
     /// Add two polynomials, summing both their coefficients one by one.
@@ -70,7 +72,7 @@ impl Polynomial {
     pub fn mul(a: &Polynomial, b: &Polynomial) -> Polynomial {
         let len = match (a.coefficients.len() + b.coefficients.len()).checked_sub(1) {
             Some(len) => len,
-            None => return Polynomial::ZERO,
+            None => return Polynomial::zero(),
         };
 
         let mut coefficients = vec![Complex::ZERO; len];
@@ -150,7 +152,7 @@ impl Polynomial {
         // The remainder is what's left from the numerator at the end of the iterations.
 
         if numerator.degree < denominator.degree {
-            return (numerator.to_owned(), Polynomial::ZERO);
+            return (numerator.to_owned(), Polynomial::zero());
         }
 
         let quotient_len = numerator.degree - denominator.degree + 1;
@@ -233,7 +235,10 @@ mod tests {
             Polynomial::add(&p1, &p2),
         );
 
-        assert_eq!(Polynomial::ZERO, Polynomial::add_in_ring(&p1, &p2, 1));
+        assert_eq!(
+            Polynomial::new(vec![Complex::new(4.0, 0.0)]),
+            Polynomial::add_in_ring(&p1, &p2, 1)
+        );
 
         let p1 = Polynomial::new(vec![Complex::new(3.0, -2.0), Complex::new(1.0, -3.0)]);
         let p2 = Polynomial::new(vec![Complex::new(1.0, 4.0), Complex::new(-1.0, 3.0)]);
@@ -394,10 +399,10 @@ mod tests {
         ]);
         assert_eq!(res_ring3, Polynomial::mul_in_ring(&p1, &p2, 3));
 
-        let res_ring2 = Polynomial::ZERO;
+        let res_ring2 = Polynomial::zero();
         assert_eq!(res_ring2, Polynomial::mul_in_ring(&p1, &p2, 2));
 
-        let res_ring1 = Polynomial::ZERO;
+        let res_ring1 = Polynomial::zero();
         assert_eq!(res_ring1, Polynomial::mul_in_ring(&p1, &p2, 1));
     }
 }
