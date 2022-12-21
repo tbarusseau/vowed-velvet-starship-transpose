@@ -48,6 +48,7 @@ impl<'a, 'b> Add<&'b Complex> for &'a Complex {
 impl Add for Complex {
     type Output = Complex;
 
+    #[allow(clippy::op_ref)]
     fn add(self, rhs: Self) -> Self::Output {
         &self + &rhs
     }
@@ -67,6 +68,7 @@ impl<'a, 'b> Mul<&'b Complex> for &'a Complex {
 impl Mul for Complex {
     type Output = Complex;
 
+    #[allow(clippy::op_ref)]
     fn mul(self, rhs: Self) -> Self::Output {
         &self * &rhs
     }

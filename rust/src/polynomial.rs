@@ -1,5 +1,7 @@
 use std::fmt::Display;
 
+use regex::Regex;
+
 use crate::complex::Complex;
 
 #[repr(C)]
@@ -21,7 +23,7 @@ impl Polynomial {
     ///
     /// The coefficients are stored from lowest degree (0) to highest degree.
     pub fn new(coefficients: Vec<Complex>) -> Polynomial {
-        if coefficients.len() == 0 {
+        if coefficients.is_empty() {
             Polynomial::zero()
         } else {
             Polynomial {
@@ -102,12 +104,14 @@ impl Polynomial {
     }
 
     /// Negates all the coefficients of a polynomial.
-    pub fn neg(mut self: Polynomial) -> Polynomial {
-        self.coefficients.iter_mut().for_each(|c| {
+    pub fn neg(&self) -> Polynomial {
+        let mut result = self.clone();
+
+        result.coefficients.iter_mut().for_each(|c| {
             *c = c.neg();
         });
 
-        self
+        result
     }
 
     /// Reduce the provided polynomial to the provided ring degree.
@@ -201,6 +205,81 @@ impl Polynomial {
         let quotient = Polynomial::new(quotient);
 
         (quotient, remainder)
+    }
+}
+
+#[cfg(feature = "parse")]
+impl From<&str> for Polynomial {
+    fn from(value: &str) -> Self {
+        let mut complexes: Vec<(usize, Complex)> = vec![];
+        let re = Regex::new(r#"\((?P<re_sign>[+-]?)(?P<re_value>([0-9]*[.])?[0-9]+) (?P<im_sign>[-+]) (?P<im_value>([0-9]*[.])?[0-9]+)?i\)(X(?P<coefficient>\d*))?"#).unwrap();
+        let names_iter = re.captures_iter(value);
+
+        for names in names_iter {
+            let re_sign = names
+                .name("re_sign")
+                .map(|m| {
+                    if m.as_str().is_empty() {
+                        "+"
+                    } else {
+                        m.as_str()
+                    }
+                })
+                .unwrap_or("+");
+            let re_value = names.name("re_value").map(|m| m.as_str()).unwrap_or("0");
+            let im_sign = names.name("im_sign").map(|m| m.as_str()).unwrap_or("+");
+            let im_value = names.name("im_value").map(|m| m.as_str()).unwrap_or("0");
+            let coefficient = names
+                .name("coefficient")
+                .map(|m| {
+                    if m.as_str().is_empty() {
+                        "1"
+                    } else {
+                        m.as_str()
+                    }
+                })
+                .unwrap_or("0");
+
+            let re_positive = re_sign == "+";
+            let im_positive = im_sign == "+";
+            let re_value = re_value
+                .parse::<f32>()
+                .expect("invalid float for real value");
+            let im_value = im_value
+                .parse::<f32>()
+                .expect("invalid float for imaginary value");
+            let coefficient = coefficient
+                .parse::<usize>()
+                .expect("invalid positive integer for coefficient");
+
+            let re = match re_positive {
+                true => re_value,
+                false => -re_value,
+            };
+            let im = match im_positive {
+                true => im_value,
+                false => -im_value,
+            };
+            complexes.push((coefficient, Complex::new(re, im)));
+        }
+
+        complexes.sort_unstable_by(|(d1, _), (d2, _)| d1.partial_cmp(d2).unwrap());
+        let biggest_degree = complexes.last().unwrap().0;
+
+        let mut coefficients = vec![Complex::ZERO; biggest_degree + 1];
+
+        let mut j = 0;
+        for (i, coefficient) in coefficients.iter_mut().enumerate().take(biggest_degree + 1) {
+            let c = complexes[j];
+            if i == c.0 {
+                *coefficient = c.1;
+                j += 1;
+            } else {
+                *coefficient = Complex::ZERO;
+            }
+        }
+
+        Polynomial::new(coefficients)
     }
 }
 
