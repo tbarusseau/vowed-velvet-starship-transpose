@@ -1,3 +1,7 @@
+use std::fmt::Display;
+
+use rand::rngs::ThreadRng;
+
 use crate::polynomial::Polynomial;
 
 #[repr(C)]
@@ -118,11 +122,62 @@ impl Matrix {
             content: result,
         }
     }
+
+    pub fn random(width: usize, height: usize, rand: &mut ThreadRng) -> Matrix {
+        let size = width * height;
+        let mut content = vec![Polynomial::zero(); size];
+
+        for i in 0..size {
+            content[i] = Polynomial::random(rand);
+        }
+
+        Matrix::new(content, width, height)
+    }
+}
+
+impl Display for Matrix {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for i in 0..self.height {
+            write!(f, "[")?;
+
+            for j in 0..self.width {
+                let index = i * self.width + j;
+
+                if j != 0 {
+                    write!(f, ", ")?;
+                }
+
+                write!(f, "{}", self.content[index])?;
+            }
+
+            if i != self.height - 1 {
+                writeln!(f, "]")?;
+            } else {
+                write!(f, "]")?;
+            }
+        }
+
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use rand::thread_rng;
+
     use super::*;
 
     // TODO: Add at least a single test for sum/multiplication.
+
+    #[test]
+    fn test_display() {
+        let mut rand = thread_rng();
+        let m1 = Matrix::random(2, 2, &mut rand);
+        let m2 = Matrix::random(2, 2, &mut rand);
+
+        println!("m1:\n{m1}");
+        println!("m2:\n{m2}");
+        println!("m1 + m2:\n{}", Matrix::add(&m1, &m2));
+        println!("m1 * m2:\n{}", Matrix::mul(&m1, &m2));
+    }
 }

@@ -1,5 +1,6 @@
 use std::fmt::Display;
 
+use rand::{rngs::ThreadRng, Rng};
 use regex::Regex;
 
 use crate::complex::Complex;
@@ -205,6 +206,23 @@ impl Polynomial {
         let quotient = Polynomial::new(quotient);
 
         (quotient, remainder)
+    }
+
+    pub fn random(rand: &mut ThreadRng) -> Polynomial {
+        let degree = rand.gen_range(1..4);
+
+        Polynomial::new(
+            (0..=degree)
+                .into_iter()
+                .map(|i| {
+                    if rand.gen_bool(0.7) || i == degree {
+                        Complex::random(rand)
+                    } else {
+                        Complex::ZERO
+                    }
+                })
+                .collect(),
+        )
     }
 }
 

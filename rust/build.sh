@@ -3,6 +3,10 @@
 set -eE
 
 cargo build --release
-cp ./target/release/libcomplex_polynomials.lib ../c_caller/lib/
-cp ./target/release/libcomplex_polynomials.dll ../c_caller/lib/
+
+for EXT in lib dll a so; do
+    if [ -f "./target/release/libcomplex_polynomials.${EXT}" ]; then
+        cp "./target/release/libcomplex_polynomials.${EXT}" ../c_caller/lib/
+    fi
+done
 

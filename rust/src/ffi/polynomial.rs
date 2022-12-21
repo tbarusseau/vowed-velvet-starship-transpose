@@ -1,4 +1,4 @@
-use rand::{thread_rng, Rng};
+use rand::thread_rng;
 
 use crate::{complex::Complex, polynomial::Polynomial};
 
@@ -26,20 +26,7 @@ pub unsafe extern "C" fn polynomial_free(poly: *mut Polynomial) {
 pub extern "C" fn gen_random_polynomial() -> *mut Polynomial {
     let mut rand = thread_rng();
 
-    let degree = rand.gen_range(1..8);
-
-    Box::into_raw(Box::new(Polynomial::new(
-        (0..=degree)
-            .into_iter()
-            .map(|i| {
-                if rand.gen_bool(0.7) || i == degree {
-                    Complex::random(&mut rand)
-                } else {
-                    Complex::ZERO
-                }
-            })
-            .collect(),
-    )))
+    Box::into_raw(Box::new(Polynomial::random(&mut rand)))
 }
 
 #[no_mangle]

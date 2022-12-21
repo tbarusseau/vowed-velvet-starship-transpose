@@ -1,6 +1,6 @@
 all:
-	@echo "!!! Note that this was not tested as I'm currently working on Windows and I'd rather use bazel! !!!"
-	${CC} -Iinc -Llib -lcomplex_polynomials -o c_caller
+	@echo "!!! Note that this was not tested as I only compiled using Bazel !!!"
+	${CC} -Iinc -Llib -lcomplex_polynomials src/main.c -o c_caller
 
 run:
 	./c_caller
