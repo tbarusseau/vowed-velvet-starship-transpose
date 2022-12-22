@@ -5,7 +5,7 @@ use rand::rngs::ThreadRng;
 use crate::polynomial::Polynomial;
 
 #[repr(C)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Matrix {
     pub width: usize,
     pub height: usize,
@@ -166,8 +166,6 @@ mod tests {
     use rand::thread_rng;
 
     use super::*;
-
-    // TODO: Add at least a single test for sum/multiplication.
 
     #[test]
     fn test_display() {

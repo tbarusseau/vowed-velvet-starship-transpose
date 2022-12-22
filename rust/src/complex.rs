@@ -54,6 +54,7 @@ impl Add for Complex {
     }
 }
 
+#[cfg(not(feature = "simd"))]
 impl<'a, 'b> Mul<&'b Complex> for &'a Complex {
     type Output = Complex;
 
@@ -61,6 +62,24 @@ impl<'a, 'b> Mul<&'b Complex> for &'a Complex {
         Complex {
             re: self.re * rhs.re - self.im * rhs.im,
             im: self.re * rhs.im + self.im * rhs.re,
+        }
+    }
+}
+
+#[cfg(feature = "simd")]
+impl<'a, 'b> Mul<&'b Complex> for &'a Complex {
+    type Output = Complex;
+
+    fn mul(self, rhs: &'b Complex) -> Self::Output {
+        use std::simd;
+
+        let s1: simd::f32x4 = simd::Simd::from([self.re, self.im, self.re, self.im]);
+        let s2: simd::f32x4 = simd::Simd::from([rhs.re, rhs.im, rhs.im, rhs.re]);
+        let s = s1 * s2;
+
+        Complex {
+            re: s[0] - s[1],
+            im: s[2] + s[3],
         }
     }
 }
